@@ -56,6 +56,11 @@ constraint assert(max_ops_per_level == -1 \/ max_ops_per_level >= 1, "max_ops_pe
 array[NODE] of var n..NONE: parent;
 array[OP] of var 0..radix: arity;
 
+array[NODE] of var 0..n: cnt; % where 0 means unused
+array[NODE] of var 0..n-1: hi;
+array[NODE] of var 0..n-1: lo;
+
+
 
 % our basic predicates for defining the behaviour of the tree, familiar rules for the definition of a tree
 predicate parent_larger() =
@@ -80,6 +85,34 @@ predicate root_is_last_used() =
   forall(v in OP where v + 1 in OP)(arity[v] >= 2 ->
    (parent[v] = NONE <-> arity[v+1] = 0));
    
+predicate unused_cnt_lo_hi_zero() = 
+  forall(v in OP)(arity[v] = 0 -> (cnt[v] = 0 /\ lo[v] = 0 /\ hi[v] = 0));
+  
+predicate cnt_value() =
+  forall(v in OP)(arity[v] >= 2 -> (sum(u in NODE)(bool2int(parent[u] = v) * cnt[u]) = cnt[v]));
+ 
+predicate cnt_one_leaf() = 
+  forall(v in LEAF)(cnt[v] = 1);
+  
+predicate hi_lo_leaf() = 
+  forall(v in LEAF)(hi[v] = v /\ lo[v] = v);
+  
+predicate hi_at_least_childs_hi() = 
+  forall(v in OP)(arity[v] >= 2 -> (forall(u in NODE)(parent[u] = v -> hi[v] >= hi[u])));
+  
+predicate hi_equals_child() = 
+  forall(v in OP)(arity[v] >= 2 -> (exists(u in NODE)(parent[u] = v /\ hi[v] = hi[u])));
+  
+predicate lo_at_most_childs_lo() = 
+  forall(v in OP)(arity[v] >= 2 -> (forall(u in NODE)(parent[u] = v -> lo[v] <= lo[u])));
+  
+predicate lo_equals_child() = 
+  forall(v in OP)(arity[v] >= 2 -> (exists(u in NODE)(parent[u] = v /\ lo[v] = lo[u])));
+  
+predicate hi_ordering() = 
+  forall(v in OP where v + 1 in OP)(arity[v+1] >= 2 -> hi[v] <= hi[v+1]);
+  
+   
 constraint parent_larger();
 constraint leaf_has_parent();
 constraint arity_check();
@@ -88,7 +121,18 @@ constraint previous_has_to_be_used();
 constraint unused_parent();
 constraint root_is_last_used();
 
+constraint unused_cnt_lo_hi_zero();
+constraint cnt_value();
+constraint cnt_one_leaf();
+
+constraint hi_lo_leaf();
+constraint hi_at_least_childs_hi();
+constraint hi_equals_child();
+constraint lo_at_most_childs_lo();
+constraint lo_equals_child();
+constraint hi_ordering();
+
 solve satisfy;
 
 
-output["parent: \(parent)\narity: \(arity)\n"];
+output["parent: \(parent)\narity: \(arity)\ncnt: \(cnt)\nhi: \(hi)\nlo: \(lo)\n"];
