@@ -1,12 +1,12 @@
-n = 5;
-radix = 2;
+n = 4;
+radix = 3;
 
 name = "n4 binary unit delay";
 commutative = true;
 
-arrival_list = [0, 0, 0, 0, 0];
-op_delay_list = [1];
-op_cost_list = [1];
+arrival_list = [0, 0, 0, 0];
+op_delay_list = [1, 1];
+op_cost_list = [1, 1];
 
 required = -1;
 max_depth = -1;
